@@ -11,6 +11,7 @@ I want to track and record ideas on my head on how to harden this project as a e
 ## Medium Priority (P1)
 - Correlation Logic: Develop logic to flag assets that appear in both audit and vulnerability scan folders, improve hallucinations.
 - Search Redundancy: Implement automated secondary search queries if Agent C returns an uncertain status.
+- Automated tests: Add gitactions for test, I still use free tier, so not yet.
 
 ## Low Priority (P2)
 - Notification Delivery: Integration with reporting tools
