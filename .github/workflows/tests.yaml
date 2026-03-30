@@ -52,4 +52,4 @@ jobs:
         env:
           AI_SERVICE_API_KEY: ${{ secrets.GENERIC_API_KEY }}
         run: |
-          pytest tests/run_pytest.py
+          pytest tests/
