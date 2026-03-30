@@ -1,15 +1,19 @@
 # --- Environment & Secrets ---
 .env
+.secrets
 .venv/
 env/
 venv/
 ENV/
+
 
 # --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+Python
+python
 
 # --- Project Specific ---
 # We ignore the raw detections to protect potentially sensitive data
