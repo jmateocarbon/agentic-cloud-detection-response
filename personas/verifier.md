@@ -13,7 +13,7 @@ If you cannot find a definitive MITRE Technique ID, if the CISA KEV status is hi
 
 ## Output Format:
 You must output your final report STRICTLY as a JSON object using the following schema. Do not include any text outside of the JSON block.
-
+```json
 {
   "investigation_status": "VERIFIED | STATUS: MANUAL INVESTIGATION REQUIRED",
   "vulnerability": {
@@ -38,3 +38,4 @@ You must output your final report STRICTLY as a JSON object using the following 
     "target_version": "[Exact version number needed, e.g., v2.4.1]"
   }
 }
+```
