@@ -1,0 +1,72 @@
+# ==============================================================================
+# WHAT THIS CHANGES FOR YOU:
+# ------------------------------------------------------------------------------
+# | Security Vector   | Previous Risk                        | Hardened State                                     |
+# |-------------------|--------------------------------------|----------------------------------------------------|
+# | Workflow Injection| Malicious branch names could exec.   | Blocked by using env variables.                    |
+# | Logic Flaws       | Only caught "known bad" patterns.    | CodeQL analyzes data flows through your agents.    |
+# | Supply Chain      | Compromised 3rd-party actions.       | Blocked by pinning specific Commit SHAs.           |
+# | Token Theft       | Stolen GHA tokens could push code.   | Blocked by permissions: contents: read.            |
+# ==============================================================================
+
+name: Secure Test Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+# STAGE 1: Prevent Token Theft
+# Limit the GITHUB_TOKEN to read-only access for the code.
+permissions:
+  contents: read
+  security-events: write # Required for CodeQL results
+
+jobs:
+  analyze:
+    name: CodeQL SAST
+    runs-on: ubuntu-latest
+    steps:
+      # STAGE 2: Block Supply Chain Attacks (Pinning SHAs)
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@4355270be567e45857f549ea29bd8b352136975d # v3.24.10
+        with:
+          languages: python
+          queries: security-extended,security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@4355270be567e45857f549ea29bd8b352136975d # v3.24.10
+
+  test:
+    name: Secure Unit Tests
+    needs: analyze
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@39cd14951b08e74b54015e9e001cdefcf80e669f # v5.1.1
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest
+
+      # STAGE 3: Block Workflow Injection
+      # Use an 'env' block to map the secret. Do NOT use ${{ secrets... }} directly in 'run'.
+      - name: Execute tests
+        env:
+          AI_SERVICE_API_KEY: ${{ secrets.GENERIC_API_KEY }}
+          # Example of blocking injection from dynamic GitHub context
+          PR_TITLE: ${{ github.event.pull_request.title }} 
+        run: |
+          pytest tests/
