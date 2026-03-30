@@ -1,4 +1,4 @@
-# Agentic Security Pod (v3.0)
+# Agentic Security Pod (v1.0)
 A stateless, AI-orchestrated pipeline designed to enrich raw security alerts into verified remediation intelligence for your cloud and infrastructure assets. 
 
 ## Table of Contents
