@@ -5,10 +5,10 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-  paths-ignore:
-      - '**.md'
-      - '.gitignore'
-      - 'LICENSE'  
+    paths-ignore:
+        - '**.md'
+        - '.gitignore'
+        - 'LICENSE'  
 
 permissions:
   contents: read
