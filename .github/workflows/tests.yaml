@@ -5,25 +5,23 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
-    paths-ignore:
-        - '**.md'
-        - '.gitignore'
-        - 'LICENSE'  
 
-permissions:
+# Read by default
   contents: read
-  security-events: write 
 
 jobs:
   analyze:
     name: CodeQL SAST
     runs-on: ubuntu-latest
+    # Write permission for Security Tabs limited to to analyzer
+    permissions:
+      contents: read
+      security-events: write 
     steps:
       - name: Checkout repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 
       
       - name: Initialize CodeQL
-        # Using your verified commit SHA for v4.35.1
         uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 
         with:
           languages: python
@@ -37,6 +35,9 @@ jobs:
     needs: analyze
     environment: agentic_cdr
     runs-on: ubuntu-latest
+    # 3. Limit AI agent permission to repo
+    permissions:
+      contents: read
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 
