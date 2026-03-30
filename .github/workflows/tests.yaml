@@ -16,18 +16,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        # v4.2.2 - Verified stable checkout
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 
       
       - name: Initialize CodeQL
-        # v4.35.1 - Latest as of March 27, 2026 (Supports Node.js 24)
-        uses: github/codeql-action/init@5c8a8a6886e0883b27b3b0dfb2f11c8d5c80521d 
+        # Using your verified commit SHA for v4.35.1
+        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 
         with:
           languages: python
           queries: security-extended,security-and-quality
 
       - name: Perform CodeQL Analysis
-        uses: github/codeql-action/analyze@5c8a8a6886e0883b27b3b0dfb2f11c8d5c80521d 
+        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 
 
   test:
     name: Secure Unit Tests
@@ -38,7 +37,6 @@ jobs:
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 
 
       - name: Set up Python
-        # v5.4.0 - Latest Python setup
         uses: actions/setup-python@f677139bbe2bd9ac37be0a3a29bd8b352136975d 
         with:
           python-version: '3.11'
