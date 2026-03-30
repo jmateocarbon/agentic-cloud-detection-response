@@ -1,10 +1,13 @@
 name: Secure Test Pipeline
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+    paths-ignore:
+      - '**/*.md'
+      - '.gitignore'
+      - 'LICENSE'
+
 
 permissions:
 # Read by default
