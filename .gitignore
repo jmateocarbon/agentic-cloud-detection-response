@@ -1,0 +1,32 @@
+# --- Environment & Secrets ---
+.env
+.venv/
+env/
+venv/
+ENV/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+
+# --- Project Specific ---
+# We ignore the raw detections to protect potentially sensitive data
+detections/vulnerability/*
+detections/audit/*
+!detections/vulnerability/.gitkeep
+!detections/audit/.gitkeep
+
+# We ignore local scan reports to keep the repo clean
+scan_reports/agentic_enrichment/*
+scan_reports/self_audit/*
+!scan_reports/agentic_enrichment/.gitkeep
+!scan_reports/self_audit/.gitkeep
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# No need to upload traceback
+traceback.md

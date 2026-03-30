@@ -1,0 +1,11 @@
+{
+  "source": "Cloud Posture Scanner",
+  "data": {
+    "category": "misconfiguration",
+    "asset_name": "company-data-processor-vm",
+    "finding_id": "AUDIT-IAM-PORT-001",
+    "severity": "Critical",
+    "description": "Compute instance has Port 22 (SSH) open to 0.0.0.0/0 AND is attached to an IAM Service Account with 'Storage Admin' privileges.",
+    "cloud_provider": "GenericCloud"
+  }
+}
