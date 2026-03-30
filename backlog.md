@@ -13,7 +13,7 @@ I want to track and record ideas on my head on how to harden this project as a e
 - Search Redundancy: Implement automated secondary search queries if Agent C returns an uncertain status.
 - Automated tests: Add gitactions for test, I still use free tier, so not yet.
 - Contain and Ship: Dockerize to easily version and provide immutable releases. To be able to host it in public cloud.
-- 
+ 
 ## Low Priority (P2)
 - Notification Delivery: Integration with reporting tools
 - Report Persistence: Implement file hashing to prevent redundant processing of existing alerts.
