@@ -1,0 +1,60 @@
+name: Secure Test Pipeline
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+        - '**.md'
+        - '.gitignore'
+        - 'LICENSE'  
+
+permissions:
+  contents: read
+  security-events: write 
+
+jobs:
+  analyze:
+    name: CodeQL SAST
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 
+      
+      - name: Initialize CodeQL
+        # Using your verified commit SHA for v4.35.1
+        uses: github/codeql-action/init@c10b8064de6f491fea524254123dbe5e09572f13 
+        with:
+          languages: python
+          queries: security-extended,security-and-quality
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@c10b8064de6f491fea524254123dbe5e09572f13 
+
+  test:
+    name: Secure Unit Tests
+    needs: analyze
+    environment: agentic_cdr
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 
+
+      - name: Set up Python
+        uses: actions/setup-python@e797f83bcb11b83ae66e0230d6156d7c80228e7c
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest google-genai
+
+      - name: Execute tests
+        env:
+          GEMINI_API_KEY: ${{ secrets.GENERIC_API_KEY }}
+        run: |
+          pytest tests/run_tests.py

@@ -1,5 +1,6 @@
 import sys
 import json
+import pytest
 from pathlib import Path
 
 # --- Pathing & Import Injection ---
@@ -10,105 +11,73 @@ sys.path.insert(0, str(parent_dir))
 import agentic_cdr
 
 # --- Test Environment Override ---
-agentic_cdr.FOLDERS = {
-    "VULN": str(current_dir / "fixtures/vulnerability"),
-    "AUDIT": str(current_dir / "fixtures/audit"),
-    "AGENTIC_OUT": str(current_dir / "output/agentic_scans"),
-    "SELF_OUT": str(current_dir / "output/self_scan")
-}
-
-# Monkey Patch: Disable main app's aggressive folder creation
-agentic_cdr.ensure_dirs = lambda: None
-
-# --- LLM Evaluation Expectations ---
-EXPECTATIONS = {
-    "test_hallucination.json": {
-        "expected_prefix": "UNCERTAIN_",
-        "required_keywords": ["MANUAL INVESTIGATION REQUIRED"]
-    },
-    "test_cve_expert.json": {
-        "expected_prefix": "VERIFIED_",
-        "required_keywords": ["CISA", "LOG4J"]
-    },
-    "test_cloud_architect.json": {
-        "expected_prefix": "VERIFIED_",
-        "required_keywords": ["T10", "SSH", "STORAGE"]
+# Using a pytest fixture is cleaner for setup/teardown
+@pytest.fixture(scope="session", autouse=True)
+def setup_test_env():
+    # Override folders
+    agentic_cdr.FOLDERS = {
+        "VULN": str(current_dir / "fixtures/vulnerability"),
+        "AUDIT": str(current_dir / "fixtures/audit"),
+        "AGENTIC_OUT": str(current_dir / "output/agentic_scans"),
+        "SELF_OUT": str(current_dir / "output/self_scan")
     }
-}
-
-def setup_test_environment():
-    """Creates isolated output directories and checks for inputs."""
+    # Monkey Patch
+    agentic_cdr.ensure_dirs = lambda: None
+    
+    # Create dirs
     Path(agentic_cdr.FOLDERS["AGENTIC_OUT"]).mkdir(parents=True, exist_ok=True)
     Path(agentic_cdr.FOLDERS["SELF_OUT"]).mkdir(parents=True, exist_ok=True)
     
-    for input_path in [agentic_cdr.FOLDERS["VULN"], agentic_cdr.FOLDERS["AUDIT"]]:
-        if not Path(input_path).exists():
-            print(f"[!] Warning: Missing input directory -> {input_path}")
+    yield # Run tests
+    
+    # Optional: Clean up after tests
+    # clean_test_outputs()
 
-def clean_test_outputs():
-    """Wipes the output directories before a run to prevent false positives."""
-    for out_dir in [agentic_cdr.FOLDERS["AGENTIC_OUT"], agentic_cdr.FOLDERS["SELF_OUT"]]:
-        path = Path(out_dir)
-        if path.exists():
-            for item in path.glob("*"):
-                if item.is_file() and item.name != ".gitkeep":
-                    item.unlink()
+# --- Expectations Logic ---
+EXPECTATIONS = {
+    "test_hallucination.json": ("UNCERTAIN_", ["MANUAL INVESTIGATION REQUIRED"]),
+    "test_cve_expert.json": ("VERIFIED_", ["CISA", "LOG4J"]),
+    "test_cloud_architect.json": ("VERIFIED_", ["T10", "SSH", "STORAGE"])
+}
 
-def validate_test_results(filename: str):
-    """Asserts that the AI generated the correct file type and content."""
-    if filename not in EXPECTATIONS:
-        return 
-        
-    rules = EXPECTATIONS[filename]
-    safe_target_name = filename.replace('.json', '')
-    
-    out_dir = Path(agentic_cdr.FOLDERS["AGENTIC_OUT"])
-    matches = list(out_dir.glob(f"{rules['expected_prefix']}*{safe_target_name}*.txt"))
-    
-    if not matches:
-        print(f"  [FAIL] Expected prefix '{rules['expected_prefix']}' but found none.")
-        return
-        
-    with open(matches[0], "r", encoding="utf-8") as f:
-        content = f.read().upper()
-        
-    for keyword in rules["required_keywords"]:
-        if keyword.upper() not in content:
-            print(f"  [FAIL] Missing mandatory keyword '{keyword}'.")
-            return
-            
-    print(f"  [PASS] AI reasoning validated successfully.")
+# --- The Actual Tests ---
 
-def process_test_directory(directory_path: str, persona: str):
-    """Loads fixtures, triggers the AI pipeline, and validates the output."""
-    json_files = Path(directory_path).glob("*.json")
-    
-    for file_path in json_files:
-        print(f"\n[*] Processing Fixture: {file_path.name}")
-        with open(file_path, 'r', encoding="utf-8") as j:
-            try:
-                data = json.load(j).get("data", {})
-                agentic_cdr.process_and_verify(data, file_path.name, persona)
-                validate_test_results(file_path.name)
-            except json.JSONDecodeError:
-                print(f"  [!] WARNING: Invalid JSON format in test fixture.")
-
-def execute_test_suite():
-    setup_test_environment()
-    print("--- 🧪 RUNNING ISOLATED TEST SUITE ---")
-    
-    print("\n[-] Cleaning previous test artifacts...")
-    clean_test_outputs()
-    
-    print("\n[-] Testing Pre-flight Integrity (Agent D)...")
+@pytest.mark.unit
+def test_preflight_integrity():
+    """Verify the Agent D self-audit logic."""
+    # If run_self_audit raises an exception, the test fails automatically
     agentic_cdr.run_self_audit()
-    
-    print("\n[-] Testing Vulnerability Processing (Agents A & C)...")
-    process_test_directory(agentic_cdr.FOLDERS["VULN"], "CVE_EXPERT")
-            
-    print("\n[-] Testing Cloud Audit Processing (Agents B & C)...")
-    process_test_directory(agentic_cdr.FOLDERS["AUDIT"], "CLOUD_ARCHITECT")
 
-if __name__ == "__main__":
-    execute_test_suite()
-    print("\n[+] Test suite complete.")
+@pytest.mark.ai
+@pytest.mark.parametrize("fixture_file", list((current_dir / "fixtures/vulnerability").glob("*.json")))
+def test_vulnerability_processing(fixture_file):
+    """Tests Agent A & C against vulnerability fixtures."""
+    run_agent_test(fixture_file, "CVE_EXPERT")
+
+@pytest.mark.ai
+@pytest.mark.parametrize("fixture_file", list((current_dir / "fixtures/audit").glob("*.json")))
+def test_cloud_audit_processing(fixture_file):
+    """Tests Agent B & C against cloud audit fixtures."""
+    run_agent_test(fixture_file, "CLOUD_ARCHITECT")
+
+def run_agent_test(file_path, persona):
+    with open(file_path, 'r', encoding="utf-8") as j:
+        data = json.load(j).get("data", {})
+    
+    # Trigger AI Pipeline
+    agentic_cdr.process_and_verify(data, file_path.name, persona)
+    
+    # Validation
+    if file_path.name in EXPECTATIONS:
+        prefix, keywords = EXPECTATIONS[file_path.name]
+        out_dir = Path(agentic_cdr.FOLDERS["AGENTIC_OUT"])
+        safe_name = file_path.name.replace('.json', '')
+        matches = list(out_dir.glob(f"{prefix}*{safe_name}*.txt"))
+        
+        # Proper Assertions: This will cause the exit code 1 if it fails
+        assert matches, f"Expected file with prefix {prefix} not found for {file_path.name}"
+        
+        with open(matches[0], "r", encoding="utf-8") as f:
+            content = f.read().upper()
+            for kw in keywords:
+                assert kw.upper() in content, f"Missing mandatory keyword: {kw}"

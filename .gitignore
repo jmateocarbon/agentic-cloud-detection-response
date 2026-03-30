@@ -1,15 +1,20 @@
 # --- Environment & Secrets ---
 .env
+.secrets
 .venv/
 env/
 venv/
 ENV/
+bin/*
+
 
 # --- Python ---
 __pycache__/
 *.py[cod]
 *$py.class
 .pytest_cache/
+Python
+python
 
 # --- Project Specific ---
 # We ignore the raw detections to protect potentially sensitive data
@@ -23,6 +28,14 @@ scan_reports/agentic_enrichment/*
 scan_reports/self_audit/*
 !scan_reports/agentic_enrichment/.gitkeep
 !scan_reports/self_audit/.gitkeep
+
+# Ignore all test outputs
+tests/output/agentic_scans/*.txt
+tests/output/self_scan/*.txt
+
+# But don't ignore the directory or the .gitkeep files
+!tests/output/agentic_scans/.gitkeep
+!tests/output/self_scan/.gitkeep
 
 # --- OS Specific ---
 .DS_Store

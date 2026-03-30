@@ -16,8 +16,18 @@ from google.genai.errors import ServerError
 load_dotenv()
 client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-PRIMARY_MODEL = "gemini-flash-lite-latest" 
-FALLBACK_MODEL = "gemini-2.5-pro"
+api_key = os.getenv("GEMINI_API_KEY")
+
+if not api_key:
+    print("[!] CRITICAL: GEMINI_API_KEY not found in environment.")
+    client = None
+else:
+    client = genai.Client(api_key=api_key)
+
+# Change to your model (I change this often due to RPD and RPM due to free tier)
+# When u actually start paying, I will refactor this part so that my token will not be used for PRs I will go broke.
+PRIMARY_MODEL = "gemini-2.5-flash" 
+FALLBACK_MODEL = "gemini-2.5-flash-lite"
 REPORTS_DIR = "scan_reports"
 PERSONA_DIR = "personas"
 

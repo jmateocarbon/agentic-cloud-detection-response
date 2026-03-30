@@ -123,5 +123,5 @@ Self-Audit Passed.
 ## Run Tests     
 [Hallucination Tests](/tests/TEST_CASES.md) 
 ```bash
-python run_tests.py
+pytest run_tests.py
 ```
