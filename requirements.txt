@@ -1,6 +1,6 @@
 # --- Core Engine ---
 google-genai==0.3.0
-python-dotenv==1.0.1
+python-dotenv==1.2.2
 
 # --- Security Scanners (Agent D/E) ---
 bandit==1.7.10
